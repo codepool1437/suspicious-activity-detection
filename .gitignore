@@ -11,7 +11,7 @@ __pycache__/
 *.onnx
 
 # Allow custom trained Hoodie weights to be uploaded
-!Model/Hoodie-detection/runs/baseline_model/weights/best.pt
+!Model/Hoodie-detection/weights/best.pt
 
 # Datasets and Video Outputs
 shoplifting_Videos/
