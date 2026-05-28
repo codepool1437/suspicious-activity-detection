@@ -12,9 +12,9 @@ with open(custom_yaml_path, "w") as f:
 tracker_type: botsort
 track_high_thresh: 0.3
 track_low_thresh: 0.1
-new_track_thresh: 0.5
+new_track_thresh: 0.6
 track_buffer: 120       # MUCH larger buffer to prevent ID switching on occlusion
-match_thresh: 0.9
+match_thresh: 0.95
 gmc_method: sparseOptFlow
 proximity_thresh: 0.5
 appearance_thresh: 0.25
@@ -30,10 +30,11 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # 2. LOAD YOLO11s (More accurate, larger model for continuity)
 print("[*] Loading YOLO11s model...")
-model = YOLO("yolo11s.pt") 
+model = YOLO("yolo12s.pt") 
 
-video_files = [f for f in os.listdir(INPUT_DIR) if f.lower().endswith(('.mp4', '.avi', '.mov', '.mkv'))]
-print(f"[*] Found {len(video_files)} videos in '{INPUT_DIR}'")
+# Process a single specific video
+video_files = ["Shoplifting001.mp4"]
+print(f"[*] Target video set to: {video_files[0]}")
 
 # Generate a static palette of 1000 vibrant colors to assign to different IDs
 colors = np.random.randint(0, 255, size=(1000, 3), dtype="int")
@@ -87,15 +88,15 @@ for video_name in video_files:
                 # Assign a specific, constant color to each unique ID
                 color = [int(c) for c in colors[track_id % len(colors)]]
                 
-                # Draw thick bounding box
-                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 4)
+                # Draw thin bounding box
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
                 
                 # Draw ID Tag background
-                cv2.rectangle(annotated_frame, (x1, y1 - 30), (x1 + 90, y1), color, -1)
+                cv2.rectangle(annotated_frame, (x1, y1 - 22), (x1 + 60, y1), color, -1)
                 
                 # Write ID Number
-                cv2.putText(annotated_frame, f"ID: {track_id}", (x1 + 5, y1 - 8), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(annotated_frame, f"ID: {track_id}", (x1 + 5, y1 - 6), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                 
         out.write(annotated_frame)
         frame_count += 1

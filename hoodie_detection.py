@@ -24,9 +24,8 @@ def main():
     use_half = bool(torch.cuda.is_available())
     print(f"Using device: {'CUDA (GPU)' if device == 0 else 'CPU'} | FP16: {use_half}")
 
-    # 2. Find videos
-    video_extensions = ('.mp4', '.avi', '.mov', '.mkv')
-    videos = [f for f in os.listdir(INPUT_FOLDER) if f.lower().endswith(video_extensions)]
+    # 2. Target specific video
+    videos = ["Explosion027_x264.mp4"]
 
     if not videos:
         print(f"No videos found in '{INPUT_FOLDER}'. Please add some video files and try again.")
