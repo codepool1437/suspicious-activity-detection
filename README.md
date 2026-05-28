@@ -1,6 +1,6 @@
 # 🛡️ Suspicious Activity Detection in Retail Environments
 
-> **TCS Industry Project** — AI-powered surveillance system for detecting shoplifting indicators in retail CCTV footage using YOLO object detection and BoT-SORT multi-object tracking.
+> AI-powered surveillance system for detecting shoplifting indicators in retail CCTV footage using YOLO object detection and BoT-SORT multi-object tracking.
 
 ---
 
@@ -216,8 +216,3 @@ Training artifacts for the custom hoodie detection model are available in `Model
 Third Year, College Industry Project
 
 ---
-
-## 📄 License
-
-This project is developed as part of an academic industry collaboration with TCS.  
-The hoodie detection dataset is licensed under **CC BY 4.0**.
