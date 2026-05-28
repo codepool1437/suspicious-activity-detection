@@ -1,6 +1,6 @@
 names:
-- '------------------------------'
-- Hoodie Detection - v1 2026-05-10 12-18
+- Normal
+- Hoodie
 nc: 2
 roboflow:
   license: CC BY 4.0
@@ -8,6 +8,6 @@ roboflow:
   url: https://universe.roboflow.com/jaydips-workspace/person-with-hoodie-detection/dataset/1
   version: 1
   workspace: jaydips-workspace
-test: /kaggle/input/datasets/incognitotemporary/roboflow-final/test/images
-train: /kaggle/input/datasets/incognitotemporary/roboflow-final/train/images
-val: /kaggle/input/datasets/incognitotemporary/roboflow-final/valid/images
+test: ../Hoodie-Detection-1/test/images
+train: ../Hoodie-Detection-1/train/images
+val: ../Hoodie-Detection-1/valid/images
