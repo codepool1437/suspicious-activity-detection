@@ -1,6 +1,6 @@
 # 🛡️ Suspicious Activity Detection in Retail Environments
 
-> AI-powered surveillance system for detecting shoplifting indicators in retail CCTV footage using YOLO object detection and BoT-SORT multi-object tracking.
+> AI-powered surveillance system for detecting shoplifting indicators in retail CCTV footage using YOLO object detection, Pose Estimation, and BoT-SORT multi-object tracking.
 
 ---
 
@@ -9,27 +9,27 @@
 Retail stores face significant losses due to shoplifting. Traditional CCTV monitoring relies entirely on human operators who cannot watch every camera feed simultaneously. This project aims to build an **intelligent video analytics system** that automatically detects suspicious behavioral indicators such as:
 
 - Persons wearing **hoodies** (face concealment)
-- Persons carrying **bags and carriers** (backpacks, handbags, suitcases)
+- Suspicious interactions with **bags and carriers** (reaching into backpacks/handbags)
 - **Customer trajectory tracking** for movement analysis
+- **Action Recognition: Pocketing Items** (Proof-of-Concept for tracking items being hidden in pockets)
 
 ---
 
 ## 🏗️ System Architecture
 
-The system is built around **three independent detection modules**, each targeting a specific shoplifting indicator:
+The system is built around **four independent modules**, each targeting a specific shoplifting indicator:
 
-```
-┌─────────────────────────────────────────────────────┐
-│              Streamlit Web Interface                 │
-│         (Upload Video → View Detections)            │
-├────────────────┬───────────────┬─────────────────────┤
-│   Module 1     │   Module 2    │     Module 3        │
-│   Hoodie       │   Bag/Carrier │     Customer        │
-│   Detection    │   Detection   │     Tracking        │
-├────────────────┼───────────────┼─────────────────────┤
-│ Custom YOLO12n │ Pretrained    │ YOLO12s +           │
-│ (best.pt)      │ YOLO (COCO)   │ BoT-SORT (ReID)     │
-└────────────────┴───────────────┴─────────────────────┘
+```text
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          Streamlit Web Interface                         │
+│                     (Upload Video → View Detections)                     │
+├───────────────┬───────────────┬─────────────────────┬────────────────────┤
+│   Module 1    │   Module 2    │     Module 3        │      Module 4      │
+│   Hoodie      │ Hand in Bag   │     Tracking        │      Pocketing     │
+├───────────────┼───────────────┼─────────────────────┼────────────────────┤
+│ Custom YOLO12n│ YOLO12n +     │ YOLO12s +           │ YOLO11s (Object) + │
+│ (best.pt)     │ YOLO11n-Pose  │ BoT-SORT (ReID)     │ YOLO11n-Pose       │
+└───────────────┴───────────────┴─────────────────────┴────────────────────┘
 ```
 
 ---
@@ -45,22 +45,18 @@ Detects persons wearing hoodies — a common face-concealment tactic during shop
 | **Base Model** | YOLOv12n (Nano) |
 | **Classes** | `Normal` (0), `Hoodie` (1) |
 | **Dataset** | 3,959 images (mined from UFC Crime Dataset) |
-| **Annotation** | Hand-annotated on [Roboflow](https://universe.roboflow.com/jaydips-workspace/person-with-hoodie-detection/dataset/1) |
-| **Augmentation** | Horizontal flip, brightness adjustment, Gaussian blur |
-| **Training** | 300 epochs, batch 16, imgsz 640, patience 50 |
-| **Platform** | Kaggle GPU |
+| **Training** | 300 epochs, Kaggle GPU |
 | **Weights** | `Model/Hoodie-detection/weights/best.pt` |
 
-### 2. Bag & Carrier Detection
+### 2. Action Recognition: Hand in Bag
 
-Detects bags and carriers that could be used to conceal stolen merchandise.
+Detects bags and carriers, and flags suspicious behavior if a person's hand reaches inside the bag for an extended period.
 
 | Detail | Value |
 |---|---|
-| **Model** | Pretrained YOLO (COCO dataset) |
-| **Target Classes** | `backpack`, `handbag`, `suitcase` |
-| **Approach** | Filters relevant classes from COCO's 80-class detection |
-| **Confidence** | 0.35 threshold |
+| **Pose Model** | YOLO11n-Pose (Tracks Wrist Keypoints) |
+| **Bag Model**  | Pretrained YOLO12n (COCO classes: `backpack`, `handbag`, `suitcase`) |
+| **Logic**      | Triggers a `HAND IN BAG!` alert if a wrist keypoint remains inside a bag's bounding box for 15+ consecutive frames. |
 
 ### 3. Customer Tracking (BoT-SORT)
 
@@ -68,17 +64,26 @@ Tracks individual customers across frames with persistent IDs for movement analy
 
 | Detail | Value |
 |---|---|
-| **Model** | YOLOv12s (Small) |
 | **Tracker** | BoT-SORT with ReID |
 | **Track Buffer** | 120 frames (~4-5 sec memory on occlusion) |
 | **Target Class** | `person` (COCO class 0) |
-| **Features** | Sparse optical flow GMC, appearance matching, unique color per ID |
+
+### 4. Action Recognition: Item Pocketing (Proof-of-Concept)
+
+Fuses Object Detection and Pose Estimation to detect the action of hiding an item in a pocket. 
+*Note: We utilize Cell Phones as our Proof-of-Concept (PoC) target because training a custom model for thousands of unique retail items (e.g., cosmetics, snacks) requires massive proprietary datasets. This module proves the tracking logic is scalable to any store's custom item weights.*
+
+| Detail | Value |
+|---|---|
+| **Pose Model** | YOLO11n-Pose (Tracks Wrist & Hip Keypoints) |
+| **Object Model**| YOLO11s (Tracks Cell Phones with high sensitivity `conf=0.15`) |
+| **Logic**      | Tracks if wrist overlaps with object, retains 60-frame memory, triggers if wrist enters pocket area. |
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 industry_project/
 │
 ├── Model/
@@ -92,8 +97,9 @@ industry_project/
 │   └── app.py                      # Streamlit web interface
 │
 ├── hoodie_detection.py             # Standalone hoodie detection script
-├── bags.py                         # Standalone bag detection script
+├── bags.py                         # Dual-model hand-in-bag detection script
 ├── advanced_botsort.py             # Standalone customer tracking script
+├── pocket_detection.py             # Dual-model item pocketing detection
 ├── custom_botsort.yaml             # BoT-SORT tracker configuration
 │
 ├── requirements.txt
@@ -120,11 +126,8 @@ cd industry_project
 # Create virtual environment
 python -m venv .venv
 
-# Activate virtual environment
-# Windows
+# Activate virtual environment (Windows)
 .venv\Scripts\activate
-# Linux/macOS
-source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -134,9 +137,7 @@ pip install -r requirements.txt
 
 ## 🚀 Usage
 
-### Option 1: Streamlit Web Interface (Recommended)
-
-The web interface lets you upload videos and run any of the three detection modules interactively.
+### Option 1: Streamlit Web Interface
 
 ```bash
 cd frontend
@@ -158,41 +159,15 @@ Run individual detection modules directly from the command line:
 # Hoodie Detection
 python hoodie_detection.py
 
-# Bag & Carrier Detection
+# Hand-in-Bag Detection
 python bags.py
 
 # Customer Tracking (BoT-SORT)
 python advanced_botsort.py
+
+# Item Pocketing Action Recognition
+python pocket_detection.py
 ```
-
-> **Note:** Edit the `video_files` list inside each script to specify which videos to process.
-
----
-
-## 📊 Training Results
-
-Training artifacts for the custom hoodie detection model are available in `Model/Hoodie-detection/training_results/`:
-
-- `results.png` — Training loss and metrics over epochs
-- `confusion_matrix.png` — Classification performance matrix
-- `BoxPR_curve.png` — Precision-Recall curve
-- `BoxF1_curve.png` — F1 score curve
-- Validation batch predictions vs ground truth
-
----
-
-## 🔧 Configuration
-
-### BoT-SORT Tracker (`custom_botsort.yaml`)
-
-| Parameter | Value | Purpose |
-|---|---|---|
-| `track_buffer` | 120 | Frames to remember occluded targets |
-| `track_high_thresh` | 0.3 | High confidence detection threshold |
-| `new_track_thresh` | 0.6 | Minimum confidence to create new track |
-| `match_thresh` | 0.95 | IoU matching threshold |
-| `with_reid` | true | Enable Re-Identification features |
-| `gmc_method` | sparseOptFlow | Global Motion Compensation method |
 
 ---
 
@@ -200,12 +175,11 @@ Training artifacts for the custom hoodie detection model are available in `Model
 
 | Component | Technology |
 |---|---|
-| Object Detection | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) (v12) |
+| Object Detection | Ultralytics YOLO (v11/v12) |
+| Pose Estimation | Ultralytics YOLO-Pose |
 | Multi-Object Tracking | BoT-SORT with ReID |
 | Video Processing | OpenCV |
 | Web Interface | Streamlit |
-| Dataset Annotation | [Roboflow](https://roboflow.com/) |
-| Model Training | Kaggle (GPU P100) |
 | Language | Python 3.x |
 
 ---
@@ -214,5 +188,3 @@ Training artifacts for the custom hoodie detection model are available in `Model
 
 **TCS Industry Project** — Suspicious Activity Detection  
 Third Year, College Industry Project
-
----
