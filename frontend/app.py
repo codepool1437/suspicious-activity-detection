@@ -12,7 +12,7 @@ st.markdown("Select an AI Module from the sidebar to analyze footage. Keeping th
 
 # Resolve paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HOODIE_MODEL_PATH = os.path.join(BASE_DIR, "Model", "Hoodie-detection", "runs", "baseline_model", "weights", "best.pt")
+HOODIE_MODEL_PATH = os.path.join(BASE_DIR, "Model", "Hoodie-detection", "weights", "best.pt")
 BOTSORT_YAML_PATH = os.path.join(BASE_DIR, "custom_botsort.yaml")
 
 # Sidebar Configuration

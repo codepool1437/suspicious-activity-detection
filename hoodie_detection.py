@@ -4,7 +4,7 @@ import torch
 from ultralytics import YOLO
 
 # Define paths
-MODEL_PATH = os.path.join("models", "best.pt")
+MODEL_PATH = os.path.join("Model", "Hoodie-detection", "weights", "best.pt")
 INPUT_FOLDER = "test_videos"
 OUTPUT_FOLDER = "output"
 
