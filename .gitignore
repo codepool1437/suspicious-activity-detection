@@ -1,0 +1,27 @@
+# Virtual Environments
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+
+# Heavy Weights (Do not push to github!)
+*.pt
+*.engine
+*.onnx
+
+# Allow custom trained Hoodie weights to be uploaded
+!Model/Hoodie-detection/runs/baseline_model/weights/best.pt
+
+# Datasets and Video Outputs
+shoplifting_Videos/
+test_videos/
+output_botsort/
+error.txt
+kaggle_model_final/
+shoplifting/
+Hoodie-Detection-1/
+
+# OS generated files
+.DS_Store
+Thumbs.db
