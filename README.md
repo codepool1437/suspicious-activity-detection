@@ -1,6 +1,6 @@
 # 🛡️ Suspicious Activity Detection in Retail Environments
 
-> AI-powered surveillance system for detecting shoplifting indicators in retail CCTV footage using YOLO object detection, Pose Estimation, and BoT-SORT multi-object tracking.
+> surveillance system for detecting shoplifting indicators in retail CCTV footage using YOLO object detection, Pose Estimation, and BoT-SORT multi-object tracking.
 
 ---
 
