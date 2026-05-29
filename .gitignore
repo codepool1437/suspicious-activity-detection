@@ -17,6 +17,7 @@ __pycache__/
 shoplifting_Videos/
 test_videos/
 output_botsort/
+output_videos/
 error.txt
 kaggle_model_final/
 shoplifting/

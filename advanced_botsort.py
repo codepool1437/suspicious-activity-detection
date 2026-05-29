@@ -13,7 +13,7 @@ tracker_type: botsort
 track_high_thresh: 0.3
 track_low_thresh: 0.1
 new_track_thresh: 0.6
-track_buffer: 120       # MUCH larger buffer to prevent ID switching on occlusion
+track_buffer: 240       # MUCH larger buffer to prevent ID switching on occlusion
 match_thresh: 0.95
 gmc_method: sparseOptFlow
 proximity_thresh: 0.5
@@ -28,12 +28,12 @@ INPUT_DIR = "shoplifting_Videos"
 OUTPUT_DIR = "output_botsort"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# 2. LOAD YOLO11s (More accurate, larger model for continuity)
-print("[*] Loading YOLO11s model...")
-model = YOLO("yolo12s.pt") 
+# 2. LOAD YOLO12n (Aligned perfectly with app.py general model)
+print("[*] Loading YOLO12n model...")
+model = YOLO("yolo12n.pt") 
 
 # Process a single specific video
-video_files = ["Shoplifting001.mp4"]
+video_files = ["Shoplifting050.mp4"]
 print(f"[*] Target video set to: {video_files[0]}")
 
 # Generate a static palette of 1000 vibrant colors to assign to different IDs

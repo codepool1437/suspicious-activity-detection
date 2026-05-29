@@ -3,7 +3,7 @@ tracker_type: botsort
 track_high_thresh: 0.3
 track_low_thresh: 0.1
 new_track_thresh: 0.6
-track_buffer: 120       # MUCH larger buffer to prevent ID switching on occlusion
+track_buffer: 240       # MUCH larger buffer to prevent ID switching on occlusion
 match_thresh: 0.95
 gmc_method: sparseOptFlow
 proximity_thresh: 0.5

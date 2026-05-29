@@ -67,7 +67,15 @@ def main():
             )  # verbose=False stops console spam
             
             # Get the frame with the bounding boxes drawn on it
-            annotated_frame = results[0].plot()
+            annotated_frame = frame.copy()
+            for box in results[0].boxes:
+                class_id = int(box.cls[0])
+                display_text = "Hoodie" if class_id == 1 else "Normal"
+                color = (0, 0, 255) if class_id == 1 else (255, 0, 0) # Red for Hoodie, Blue for Normal
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
+                cv2.rectangle(annotated_frame, (x1, y1 - 22), (x1 + max(80, len(display_text)*12), y1), color, -1)
+                cv2.putText(annotated_frame, f"{display_text} {box.conf[0]:.2f}", (x1 + 5, y1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
             # Write to our saved output file
             out.write(annotated_frame)

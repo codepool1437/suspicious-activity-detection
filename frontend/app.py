@@ -19,7 +19,7 @@ BOTSORT_YAML_PATH = os.path.join(BASE_DIR, "custom_botsort.yaml")
 # Heuristic parameters
 POCKET_DISTANCE_THRESHOLD = 50.0  
 PHONE_DISTANCE_THRESHOLD = 80.0   
-FRAMES_THRESHOLD = 15            
+FRAMES_THRESHOLD = 10            
 
 # Helper Functions
 def calculate_distance(p1, p2):
@@ -38,7 +38,7 @@ st.sidebar.title("Control Panel")
 app_mode = st.sidebar.radio("Select AI Module:", 
     [
         "1. Customer Tracking (BoT-SORT)", 
-        "2. Action: Hand in Bag", 
+        "2. Bag Detection", 
         "3. Action: Pocketing (Cell Phone)",
         "4. Hoodie Detection"
     ]
@@ -74,10 +74,9 @@ if app_mode == "1. Customer Tracking (BoT-SORT)":
     st.subheader("Customer Trajectory Tracking")
     model = load_general_model()
 
-elif app_mode == "2. Action: Hand in Bag":
-    st.subheader("Action Recognition: Hand in Bag")
+elif app_mode == "2. Bag Detection":
+    st.subheader("Bag Detection")
     bag_model = load_general_model()
-    pose_model = load_pose_model()
 
 elif app_mode == "3. Action: Pocketing (Cell Phone)":
     st.subheader("Action Recognition: Item Pocketing")
@@ -146,48 +145,15 @@ if uploaded_file is not None:
                         cv2.rectangle(annotated_frame, (x1, y1 - 22), (x1 + 60, y1), color, -1)
                         cv2.putText(annotated_frame, f"ID:{track_id}", (x1 + 5, y1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                         
-            # MODULE 2: HAND IN BAG
-            elif app_mode == "2. Action: Hand in Bag":
+            # MODULE 2: BAG DETECTION
+            elif app_mode == "2. Bag Detection":
                 bag_results = bag_model(frame, classes=[24, 26, 28], conf=conf_threshold, verbose=False)
-                bag_boxes = []
                 if bag_results[0].boxes:
                     for box in bag_results[0].boxes:
                         cls_name = bag_model.names[int(box.cls[0])]
                         x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
-                        bag_boxes.append((x1, y1, x2, y2))
                         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (255, 165, 0), 2)
-                        cv2.putText(annotated_frame, f"{cls_name} {box.conf[0].item():.2f}", (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 165, 0), 2)
-                        
-                pose_results = pose_model.track(frame, persist=True, verbose=False)
-                if pose_results[0].boxes is not None and pose_results[0].boxes.id is not None and pose_results[0].keypoints is not None:
-                    boxes = pose_results[0].boxes.xyxy.cpu().numpy()
-                    ids = pose_results[0].boxes.id.cpu().numpy().astype(int)
-                    keypoints = pose_results[0].keypoints.xy.cpu().numpy()
-                    confs = pose_results[0].keypoints.conf.cpu().numpy()
-                    
-                    for box, track_id, kpts, conf in zip(boxes, ids, keypoints, confs):
-                        x1, y1, x2, y2 = map(int, box)
-                        left_wrist, right_wrist = kpts[9], kpts[10]
-                        lw_conf, rw_conf = conf[9], conf[10]
-                        
-                        hand_is_in_bag = False
-                        for b_box in bag_boxes:
-                            if lw_conf > 0.5 and is_point_near_box(left_wrist[0], left_wrist[1], b_box): hand_is_in_bag = True
-                            if rw_conf > 0.5 and is_point_near_box(right_wrist[0], right_wrist[1], b_box): hand_is_in_bag = True
-                                
-                        if hand_is_in_bag:
-                            hand_in_bag_state[track_id] = hand_in_bag_state.get(track_id, 0) + 1
-                        else:
-                            hand_in_bag_state[track_id] = 0
-                            
-                        is_suspicious = hand_in_bag_state.get(track_id, 0) >= FRAMES_THRESHOLD
-                        color = (0, 0, 255) if is_suspicious else (0, 255, 0)
-                        
-                        cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
-                        if is_suspicious:
-                            cv2.putText(annotated_frame, f"ID:{track_id} HAND IN BAG!", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 3)
-                        else:
-                            cv2.putText(annotated_frame, f"ID:{track_id}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+                        cv2.putText(annotated_frame, f"{cls_name.capitalize()} {box.conf[0].item():.2f}", (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 165, 0), 2)
 
             # MODULE 3: POCKETING
             elif app_mode == "3. Action: Pocketing (Cell Phone)":

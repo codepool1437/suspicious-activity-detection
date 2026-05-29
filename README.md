@@ -9,7 +9,7 @@
 Retail stores face significant losses due to shoplifting. Traditional CCTV monitoring relies entirely on human operators who cannot watch every camera feed simultaneously. This project aims to build an **intelligent video analytics system** that automatically detects suspicious behavioral indicators such as:
 
 - Persons wearing **hoodies** (face concealment)
-- Suspicious interactions with **bags and carriers** (reaching into backpacks/handbags)
+- Detecting high-risk **bags and carriers** (backpacks/handbags) used for shoplifting
 - **Customer trajectory tracking** for movement analysis
 - **Action Recognition: Pocketing Items** (Proof-of-Concept for tracking items being hidden in pockets)
 
@@ -25,10 +25,10 @@ The system is built around **four independent modules**, each targeting a specif
 │                     (Upload Video → View Detections)                     │
 ├───────────────┬───────────────┬─────────────────────┬────────────────────┤
 │   Module 1    │   Module 2    │     Module 3        │      Module 4      │
-│   Hoodie      │ Hand in Bag   │     Tracking        │      Pocketing     │
+│   Hoodie      │ Bag Detection │     Tracking        │      Pocketing     │
 ├───────────────┼───────────────┼─────────────────────┼────────────────────┤
-│ Custom YOLO12n│ YOLO12n +     │ YOLO12s +           │ YOLO11s (Object) + │
-│ (best.pt)     │ YOLO11n-Pose  │ BoT-SORT (ReID)     │ YOLO11n-Pose       │
+│ Custom YOLO12n│ YOLO12n       │ YOLO12n +           │ YOLO11s (Object) + │
+│ (best.pt)     │ (Object)      │ BoT-SORT (ReID)     │ YOLO11n-Pose       │
 └───────────────┴───────────────┴─────────────────────┴────────────────────┘
 ```
 
@@ -48,15 +48,15 @@ Detects persons wearing hoodies — a common face-concealment tactic during shop
 | **Training** | 300 epochs, Kaggle GPU |
 | **Weights** | `Model/Hoodie-detection/weights/best.pt` |
 
-### 2. Action Recognition: Hand in Bag
+### 2. Receptacle (Bag) Detection
 
-Detects bags and carriers, and flags suspicious behavior if a person's hand reaches inside the bag for an extended period.
+Detects common shoplifting receptacles to alert security to individuals carrying items capable of concealing large amounts of stolen goods.
 
 | Detail | Value |
 |---|---|
-| **Pose Model** | YOLO11n-Pose (Tracks Wrist Keypoints) |
-| **Bag Model**  | Pretrained YOLO12n (COCO classes: `backpack`, `handbag`, `suitcase`) |
-| **Logic**      | Triggers a `HAND IN BAG!` alert if a wrist keypoint remains inside a bag's bounding box for 15+ consecutive frames. |
+| **Model**      | Pretrained YOLO12n |
+| **Target Classes**| COCO classes: `backpack` (24), `handbag` (26), `suitcase` (28) |
+| **Logic**      | Draws real-time bounding boxes and confidence scores around detected receptacles. |
 
 ### 3. Customer Tracking (BoT-SORT)
 
@@ -97,7 +97,7 @@ industry_project/
 │   └── app.py                      # Streamlit web interface
 │
 ├── hoodie_detection.py             # Standalone hoodie detection script
-├── bags.py                         # Dual-model hand-in-bag detection script
+├── bags.py                         # Bag/Receptacle detection script
 ├── advanced_botsort.py             # Standalone customer tracking script
 ├── pocket_detection.py             # Dual-model item pocketing detection
 ├── custom_botsort.yaml             # BoT-SORT tracker configuration
@@ -159,7 +159,7 @@ Run individual detection modules directly from the command line:
 # Hoodie Detection
 python hoodie_detection.py
 
-# Hand-in-Bag Detection
+# Bag/Receptacle Detection
 python bags.py
 
 # Customer Tracking (BoT-SORT)
